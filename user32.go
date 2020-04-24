@@ -7,6 +7,7 @@
 package win
 
 import (
+	"math"
 	"syscall"
 	"unsafe"
 
@@ -477,6 +478,14 @@ const (
 	UISF_HIDEFOCUS = 0x1
 	UISF_HIDEACCEL = 0x2
 	UISF_ACTIVE    = 0x4
+)
+
+// Key Modifiers
+const (
+	MOD_ALT     = 0x0001
+	MOD_CONTROL = 0x0002
+	MOD_SHIFT   = 0x0004
+	MOD_WIN     = 0x0008
 )
 
 // Virtual key codes
@@ -1790,6 +1799,7 @@ var (
 	endPaint                    *windows.LazyProc
 	enumChildWindows            *windows.LazyProc
 	findWindow                  *windows.LazyProc
+	findWindowEx                *windows.LazyProc
 	getActiveWindow             *windows.LazyProc
 	getAncestor                 *windows.LazyProc
 	getCaretPos                 *windows.LazyProc
@@ -1821,6 +1831,7 @@ var (
 	getWindowLongPtr            *windows.LazyProc
 	getWindowPlacement          *windows.LazyProc
 	getWindowRect               *windows.LazyProc
+	getWindowText               *windows.LazyProc
 	getWindowThreadProcessId    *windows.LazyProc
 	insertMenuItem              *windows.LazyProc
 	invalidateRect              *windows.LazyProc
@@ -1834,6 +1845,7 @@ var (
 	killTimer                   *windows.LazyProc
 	loadCursor                  *windows.LazyProc
 	loadIcon                    *windows.LazyProc
+	loadBitmap                  *windows.LazyProc
 	loadImage                   *windows.LazyProc
 	loadMenu                    *windows.LazyProc
 	loadString                  *windows.LazyProc
@@ -1848,6 +1860,7 @@ var (
 	postMessage                 *windows.LazyProc
 	postQuitMessage             *windows.LazyProc
 	registerClassEx             *windows.LazyProc
+	registerHotKey              *windows.LazyProc
 	registerRawInputDevices     *windows.LazyProc
 	registerWindowMessage       *windows.LazyProc
 	releaseCapture              *windows.LazyProc
@@ -1857,6 +1870,7 @@ var (
 	sendDlgItemMessage          *windows.LazyProc
 	sendInput                   *windows.LazyProc
 	sendMessage                 *windows.LazyProc
+	sendMessageTimeout          *windows.LazyProc
 	setActiveWindow             *windows.LazyProc
 	setCapture                  *windows.LazyProc
 	setClipboardData            *windows.LazyProc
@@ -1883,9 +1897,11 @@ var (
 	trackPopupMenuEx            *windows.LazyProc
 	translateMessage            *windows.LazyProc
 	unhookWinEvent              *windows.LazyProc
+	unregisterHotKey            *windows.LazyProc
 	updateWindow                *windows.LazyProc
 	windowFromDC                *windows.LazyProc
 	windowFromPoint             *windows.LazyProc
+	setLayeredWindowAttributes  *windows.LazyProc
 )
 
 func init() {
@@ -1930,6 +1946,7 @@ func init() {
 	endPaint = libuser32.NewProc("EndPaint")
 	enumChildWindows = libuser32.NewProc("EnumChildWindows")
 	findWindow = libuser32.NewProc("FindWindowW")
+	findWindowEx = libuser32.NewProc("FindWindowExW")
 	getActiveWindow = libuser32.NewProc("GetActiveWindow")
 	getAncestor = libuser32.NewProc("GetAncestor")
 	getCaretPos = libuser32.NewProc("GetCaretPos")
@@ -1966,6 +1983,7 @@ func init() {
 	}
 	getWindowPlacement = libuser32.NewProc("GetWindowPlacement")
 	getWindowRect = libuser32.NewProc("GetWindowRect")
+	getWindowText = libuser32.NewProc("GetWindowTextW")
 	getWindowThreadProcessId = libuser32.NewProc("GetWindowThreadProcessId")
 	insertMenuItem = libuser32.NewProc("InsertMenuItemW")
 	invalidateRect = libuser32.NewProc("InvalidateRect")
@@ -1979,6 +1997,7 @@ func init() {
 	killTimer = libuser32.NewProc("KillTimer")
 	loadCursor = libuser32.NewProc("LoadCursorW")
 	loadIcon = libuser32.NewProc("LoadIconW")
+	loadBitmap = libuser32.NewProc("LoadBitmapW")
 	loadImage = libuser32.NewProc("LoadImageW")
 	loadMenu = libuser32.NewProc("LoadMenuW")
 	loadString = libuser32.NewProc("LoadStringW")
@@ -1993,6 +2012,7 @@ func init() {
 	postMessage = libuser32.NewProc("PostMessageW")
 	postQuitMessage = libuser32.NewProc("PostQuitMessage")
 	registerClassEx = libuser32.NewProc("RegisterClassExW")
+	registerHotKey = libuser32.NewProc("RegisterHotKey")
 	registerRawInputDevices = libuser32.NewProc("RegisterRawInputDevices")
 	registerWindowMessage = libuser32.NewProc("RegisterWindowMessageW")
 	releaseCapture = libuser32.NewProc("ReleaseCapture")
@@ -2002,6 +2022,7 @@ func init() {
 	sendDlgItemMessage = libuser32.NewProc("SendDlgItemMessageW")
 	sendInput = libuser32.NewProc("SendInput")
 	sendMessage = libuser32.NewProc("SendMessageW")
+	sendMessageTimeout = libuser32.NewProc("SendMessageTimeoutW")
 	setActiveWindow = libuser32.NewProc("SetActiveWindow")
 	setCapture = libuser32.NewProc("SetCapture")
 	setClipboardData = libuser32.NewProc("SetClipboardData")
@@ -2033,9 +2054,11 @@ func init() {
 	trackPopupMenuEx = libuser32.NewProc("TrackPopupMenuEx")
 	translateMessage = libuser32.NewProc("TranslateMessage")
 	unhookWinEvent = libuser32.NewProc("UnhookWinEvent")
+	unregisterHotKey = libuser32.NewProc("UnregisterHotKey")
 	updateWindow = libuser32.NewProc("UpdateWindow")
 	windowFromDC = libuser32.NewProc("WindowFromDC")
 	windowFromPoint = libuser32.NewProc("WindowFromPoint")
+	setLayeredWindowAttributes = libuser32.NewProc("SetLayeredWindowAttributes")
 }
 
 func AddClipboardFormatListener(hwnd HWND) bool {
@@ -2407,6 +2430,17 @@ func FindWindow(lpClassName, lpWindowName *uint16) HWND {
 	return HWND(ret)
 }
 
+func FindWindowEx(hWndParent, hWndChildAfter HWND, lpszClass, lpszWindow *uint16) HWND {
+	ret, _, _ := syscall.Syscall6(findWindowEx.Addr(), 4,
+		uintptr(hWndParent),
+		uintptr(hWndChildAfter),
+		uintptr(unsafe.Pointer(lpszClass)),
+		uintptr(unsafe.Pointer(lpszWindow)),
+		0, 0)
+
+	return HWND(ret)
+}
+
 func GetActiveWindow() HWND {
 	ret, _, _ := syscall.Syscall(getActiveWindow.Addr(), 0,
 		0,
@@ -2648,7 +2682,7 @@ func GetSystemMetrics(nIndex int32) int32 {
 
 func GetSystemMetricsForDpi(nIndex int32, dpi uint32) int32 {
 	if getSystemMetricsForDpi.Find() != nil {
-		return GetSystemMetrics(nIndex)
+		return int32(math.Round(float64(GetSystemMetrics(nIndex)) * float64(dpi) / float64(GetDpiForWindow(0))))
 	}
 
 	ret, _, _ := syscall.Syscall(getSystemMetricsForDpi.Addr(), 2,
@@ -2702,6 +2736,15 @@ func GetWindowRect(hWnd HWND, rect *RECT) bool {
 		0)
 
 	return ret != 0
+}
+
+func GetWindowText(hWnd HWND, buf *uint16, length int32) int32 {
+	ret, _, _ := syscall.Syscall(getWindowText.Addr(), 3,
+		uintptr(hWnd),
+		uintptr(unsafe.Pointer(buf)),
+		uintptr(length))
+
+	return int32(ret)
 }
 
 func InsertMenuItem(hMenu HMENU, uItem uint32, fByPosition bool, lpmii *MENUITEMINFO) bool {
@@ -2813,6 +2856,15 @@ func LoadIcon(hInstance HINSTANCE, lpIconName *uint16) HICON {
 		0)
 
 	return HICON(ret)
+}
+
+func LoadBitmap(hInstance HINSTANCE, lpBitmapName *uint16) HBITMAP {
+	ret, _, _ := syscall.Syscall(loadBitmap.Addr(), 2,
+		uintptr(hInstance),
+		uintptr(unsafe.Pointer(lpBitmapName)),
+		0)
+
+	return HBITMAP(ret)
 }
 
 func LoadImage(hinst HINSTANCE, lpszName *uint16, uType uint32, cxDesired, cyDesired int32, fuLoad uint32) HANDLE {
@@ -2972,6 +3024,18 @@ func RegisterClassEx(windowClass *WNDCLASSEX) ATOM {
 	return ATOM(ret)
 }
 
+func RegisterHotKey(hwnd HWND, id int, fsModifiers, vk uint) bool {
+	ret, _, _ := syscall.Syscall6(registerHotKey.Addr(), 4,
+		uintptr(hwnd),
+		uintptr(id),
+		uintptr(fsModifiers),
+		uintptr(vk),
+		0,
+		0)
+
+	return ret != 0
+}
+
 func RegisterRawInputDevices(pRawInputDevices *RAWINPUTDEVICE, uiNumDevices uint32, cbSize uint32) bool {
 	ret, _, _ := syscall.Syscall(registerRawInputDevices.Addr(), 3,
 		uintptr(unsafe.Pointer(pRawInputDevices)),
@@ -3056,6 +3120,20 @@ func SendMessage(hWnd HWND, msg uint32, wParam, lParam uintptr) uintptr {
 		lParam,
 		0,
 		0)
+
+	return ret
+}
+
+func SendMessageTimeout(hWnd HWND, msg uint32, wParam, lParam uintptr, fuFlags, uTimeout uint32, lpdwResult uintptr) uintptr {
+	ret, _, _ := syscall.Syscall9(sendMessageTimeout.Addr(), 7,
+		uintptr(hWnd),
+		uintptr(msg),
+		wParam,
+		lParam,
+		uintptr(fuFlags),
+		uintptr(uTimeout),
+		lpdwResult,
+		0, 0)
 
 	return ret
 }
@@ -3325,6 +3403,15 @@ func UnhookWinEvent(hWinHookEvent HWINEVENTHOOK) bool {
 	return ret != 0
 }
 
+func UnregisterHotKey(hwnd HWND, id int) bool {
+	ret, _, _ := syscall.Syscall(unregisterHotKey.Addr(), 2,
+		uintptr(hwnd),
+		uintptr(id),
+		0)
+
+	return ret != 0
+}
+
 func UpdateWindow(hwnd HWND) bool {
 	ret, _, _ := syscall.Syscall(updateWindow.Addr(), 1,
 		uintptr(hwnd),
@@ -3350,4 +3437,16 @@ func WindowFromPoint(Point POINT) HWND {
 		0)
 
 	return HWND(ret)
+}
+
+func SetLayeredWindowAttributes(hwnd HWND, crKey COLORREF, bAlpha byte, dwFlags uint32) bool {
+	ret, _, _ := syscall.Syscall6(setLayeredWindowAttributes.Addr(), 4,
+		uintptr(hwnd),
+		uintptr(crKey),
+		uintptr(bAlpha),
+		uintptr(dwFlags),
+		0,
+		0)
+
+	return ret != 0
 }

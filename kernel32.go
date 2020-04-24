@@ -65,6 +65,7 @@ var (
 	findResource                       *windows.LazyProc
 	getConsoleTitle                    *windows.LazyProc
 	getConsoleWindow                   *windows.LazyProc
+	getCurrentProcessId                *windows.LazyProc
 	getCurrentThreadId                 *windows.LazyProc
 	getLastError                       *windows.LazyProc
 	getLocaleInfo                      *windows.LazyProc
@@ -84,9 +85,13 @@ var (
 	mulDiv                             *windows.LazyProc
 	loadResource                       *windows.LazyProc
 	lockResource                       *windows.LazyProc
+	openProcess                        *windows.LazyProc
 	setLastError                       *windows.LazyProc
 	sizeofResource                     *windows.LazyProc
 	systemTimeToFileTime               *windows.LazyProc
+	writeProcessMemory                 *windows.LazyProc
+	createMutexW                       *windows.LazyProc
+	releaseMutex                       *windows.LazyProc
 )
 
 type (
@@ -139,6 +144,12 @@ type ACTCTX struct {
 	Module                HMODULE
 }
 
+type SECURITY_ATTRIBUTES struct {
+	NLength              uint32
+	LPSecurityDescriptor *uint16
+	BInheritHandle       bool
+}
+
 func init() {
 	// Library
 	libkernel32 = windows.NewLazySystemDLL("kernel32.dll")
@@ -151,6 +162,7 @@ func init() {
 	findResource = libkernel32.NewProc("FindResourceW")
 	getConsoleTitle = libkernel32.NewProc("GetConsoleTitleW")
 	getConsoleWindow = libkernel32.NewProc("GetConsoleWindow")
+	getCurrentProcessId = libkernel32.NewProc("GetCurrentProcessId")
 	getCurrentThreadId = libkernel32.NewProc("GetCurrentThreadId")
 	getLastError = libkernel32.NewProc("GetLastError")
 	getLocaleInfo = libkernel32.NewProc("GetLocaleInfoW")
@@ -170,9 +182,13 @@ func init() {
 	mulDiv = libkernel32.NewProc("MulDiv")
 	loadResource = libkernel32.NewProc("LoadResource")
 	lockResource = libkernel32.NewProc("LockResource")
+	openProcess = libkernel32.NewProc("OpenProcess")
 	setLastError = libkernel32.NewProc("SetLastError")
 	sizeofResource = libkernel32.NewProc("SizeofResource")
 	systemTimeToFileTime = libkernel32.NewProc("SystemTimeToFileTime")
+	writeProcessMemory = libkernel32.NewProc("WriteProcessMemory")
+	createMutexW = libkernel32.NewProc("CreateMutexW")
+	releaseMutex = libkernel32.NewProc("ReleaseMutex")
 }
 
 func ActivateActCtx(ctx HANDLE) (uintptr, bool) {
@@ -240,6 +256,15 @@ func GetConsoleWindow() HWND {
 		0)
 
 	return HWND(ret)
+}
+
+func GetCurrentProcessId() uint32 {
+	ret, _, _ := syscall.Syscall(getCurrentProcessId.Addr(), 0,
+		0,
+		0,
+		0)
+
+	return uint32(ret)
 }
 
 func GetCurrentThreadId() uint32 {
@@ -448,4 +473,35 @@ func SystemTimeToFileTime(lpSystemTime *SYSTEMTIME, lpFileTime *FILETIME) bool {
 		0)
 
 	return ret != 0
+}
+
+func WriteProcessMemory(hProcess HANDLE, lpBaseAddress, lpBuffer uintptr, nSize uintptr, lpNumberOfBytesWritten uintptr) bool {
+	ret, _, _ := syscall.Syscall6(writeProcessMemory.Addr(), 5,
+		uintptr(hProcess),
+		lpBaseAddress,
+		lpBuffer,
+		nSize,
+		lpNumberOfBytesWritten,
+		0)
+
+	return ret != 0
+}
+
+func OpenProcess(dwDesiredAccess, bInheritHandle, dwProcessId uintptr) HANDLE {
+	ret, _, _ := syscall.Syscall(openProcess.Addr(), 3,
+		dwDesiredAccess,
+		bInheritHandle,
+		dwProcessId)
+
+	return HANDLE(ret)
+} 
+
+func CreateMutex(attr uintptr, bInitialOwner BOOL, lpName string) (HANDLE, syscall.Errno) {
+	name, _ := syscall.UTF16PtrFromString(lpName)
+	h, _, err := syscall.Syscall(createMutexW.Addr(), 3, attr, uintptr(bInitialOwner), uintptr(unsafe.Pointer(name)))
+	return HANDLE(h), err
+}
+func ReleaseMutex(handle HANDLE) bool {
+	b, _, _ := syscall.Syscall(releaseMutex.Addr(), 1, uintptr(handle), 0, 0)
+	return b == TRUE
 }
