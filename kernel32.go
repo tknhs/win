@@ -90,8 +90,9 @@ var (
 	sizeofResource                     *windows.LazyProc
 	systemTimeToFileTime               *windows.LazyProc
 	writeProcessMemory                 *windows.LazyProc
-	createMutexW                       *windows.LazyProc
+	createMutex                        *windows.LazyProc
 	releaseMutex                       *windows.LazyProc
+	expandEnvironmentStrings           *windows.LazyProc
 )
 
 type (
@@ -187,8 +188,9 @@ func init() {
 	sizeofResource = libkernel32.NewProc("SizeofResource")
 	systemTimeToFileTime = libkernel32.NewProc("SystemTimeToFileTime")
 	writeProcessMemory = libkernel32.NewProc("WriteProcessMemory")
-	createMutexW = libkernel32.NewProc("CreateMutexW")
+	createMutex = libkernel32.NewProc("CreateMutexW")
 	releaseMutex = libkernel32.NewProc("ReleaseMutex")
+	expandEnvironmentStrings = libkernel32.NewProc("ExpandEnvironmentStringsW")
 }
 
 func ActivateActCtx(ctx HANDLE) (uintptr, bool) {
@@ -498,10 +500,21 @@ func OpenProcess(dwDesiredAccess, bInheritHandle, dwProcessId uintptr) HANDLE {
 
 func CreateMutex(attr uintptr, bInitialOwner BOOL, lpName string) (HANDLE, syscall.Errno) {
 	name, _ := syscall.UTF16PtrFromString(lpName)
-	h, _, err := syscall.Syscall(createMutexW.Addr(), 3, attr, uintptr(bInitialOwner), uintptr(unsafe.Pointer(name)))
+	h, _, err := syscall.Syscall(createMutex.Addr(), 3, attr, uintptr(bInitialOwner), uintptr(unsafe.Pointer(name)))
 	return HANDLE(h), err
 }
 func ReleaseMutex(handle HANDLE) bool {
 	b, _, _ := syscall.Syscall(releaseMutex.Addr(), 1, uintptr(handle), 0, 0)
 	return b == TRUE
 }
+
+func ExpandEnvironmentStrings(LPCWSTR string, LPWSTR *uint16, nSize uint32) uint32 {
+	src, _ := syscall.UTF16PtrFromString(LPCWSTR)
+
+	ret, _, _ := syscall.Syscall(expandEnvironmentStrings.Addr(), 3,
+		uintptr(unsafe.Pointer(src)),
+		uintptr(unsafe.Pointer(LPWSTR)),
+		uintptr(nSize))
+
+	return uint32(ret)
+} 
