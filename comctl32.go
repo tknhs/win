@@ -274,6 +274,8 @@ var (
 	initCommonControlsEx  *windows.LazyProc
 	loadIconMetric        *windows.LazyProc
 	loadIconWithScaleDown *windows.LazyProc
+	setWindowSubclass     *windows.LazyProc
+	defSubclassProc       *windows.LazyProc
 )
 
 func init() {
@@ -290,6 +292,8 @@ func init() {
 	initCommonControlsEx = libcomctl32.NewProc("InitCommonControlsEx")
 	loadIconMetric = libcomctl32.NewProc("LoadIconMetric")
 	loadIconWithScaleDown = libcomctl32.NewProc("LoadIconWithScaleDown")
+	setWindowSubclass = libcomctl32.NewProc("SetWindowSubclass")
+	defSubclassProc = libcomctl32.NewProc("DefSubclassProc")
 }
 
 func ImageList_Add(himl HIMAGELIST, hbmImage, hbmMask HBITMAP) int32 {
@@ -395,4 +399,31 @@ func LoadIconWithScaleDown(hInstance HINSTANCE, lpIconName *uint16, w int32, h i
 		0)
 
 	return HRESULT(ret)
+}
+
+func SetWindowSubclass(hwnd HWND, pfnSubclass uintptr, uIdSubclass UINT_PTR, dwRefData DWORD_PTR) BOOL {
+	if setWindowSubclass.Find() != nil {
+		return -((E_NOTIMPL ^ 0xFFFFFFFF) + 1)
+	}
+	ret, _, _ := syscall.Syscall6(setWindowSubclass.Addr(), 4,
+		uintptr(hwnd),
+		uintptr(pfnSubclass),
+		uintptr(uIdSubclass),
+		uintptr(dwRefData),
+		0,
+		0)
+
+	return BOOL(ret)
+}
+
+func DefSubclassProc(hWnd HWND, Msg uint32, wParam, lParam uintptr) uintptr {
+	ret, _, _ := syscall.Syscall6(defSubclassProc.Addr(), 4,
+		uintptr(hWnd),
+		uintptr(Msg),
+		wParam,
+		lParam,
+		0,
+		0)
+
+	return ret
 }
