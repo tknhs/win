@@ -7,12 +7,14 @@
 package win
 
 import (
-	"golang.org/x/sys/windows"
 	"syscall"
 	"unsafe"
+
+	"golang.org/x/sys/windows"
 )
 
 const MAX_PATH = 260
+const INVALID_HANDLE_VALUE = 0xffffffff
 
 // Error codes
 const (
@@ -51,6 +53,58 @@ const (
 	LOCALE_SISO3166CTRYNAME2 LCTYPE = 0x68
 	LOCALE_SISO639LANGNAME   LCTYPE = 0x59
 	LOCALE_SISO639LANGNAME2  LCTYPE = 0x67
+)
+
+// dwDesiredAccess
+const (
+	GENERIC_READ    = 0x80000000
+	GENERIC_WRITE   = 0x40000000
+	GENERIC_EXECUTE = 0x20000000
+	GENERIC_ALL     = 0x10000000
+)
+
+// dwShareMode
+const (
+	FILE_SHARE_READ   = 0x00000001
+	FILE_SHARE_WRITE  = 0x00000002
+	FILE_SHARE_DELETE = 0x00000004
+)
+
+// dwCreationDisposition
+const (
+	CREATE_NEW        = 1
+	CREATE_ALWAYS     = 2
+	OPEN_EXISTING     = 3
+	OPEN_ALWAYS       = 4
+	TRUNCATE_EXISTING = 5
+)
+
+// dwFlagsAndAttributes
+const (
+	FILE_FLAG_WRITE_THROUGH   = 0x80000000
+	FILE_FLAG_NO_BUFFERING    = 0x20000000
+	FILE_FLAG_RANDOM_ACCESS   = 0x10000000
+	FILE_FLAG_SEQUENTIAL_SCAN = 0x08000000
+	FILE_FLAG_DELETE_ON_CLOSE = 0x04000000
+	FILE_FLAG_OVERLAPPED      = 0x40000000
+)
+
+// // dwFlagsAndAttributes
+const (
+	FILE_ATTRIBUTE_READONLY  = 0x00000001
+	FILE_ATTRIBUTE_HIDDEN    = 0x00000002
+	FILE_ATTRIBUTE_SYSTEM    = 0x00000004
+	FILE_ATTRIBUTE_DIRECTORY = 0x00000010
+	FILE_ATTRIBUTE_ARCHIVE   = 0x00000020
+	FILE_ATTRIBUTE_DEVICE    = 0x00000040
+	FILE_ATTRIBUTE_NORMAL    = 0x00000080
+	FILE_ATTRIBUTE_TEMPORARY = 0x00000100
+)
+
+const (
+	STD_INPUT_HANDLE  = 0xfffffff6
+	STD_OUTPUT_HANDLE = 0xfffffff5
+	STD_ERROR_HANDLE  = 0xfffffff4
 )
 
 var (
@@ -93,6 +147,9 @@ var (
 	createMutex                        *windows.LazyProc
 	releaseMutex                       *windows.LazyProc
 	expandEnvironmentStrings           *windows.LazyProc
+	createFile                         *windows.LazyProc
+	writeFile                          *windows.LazyProc
+	readFile                           *windows.LazyProc
 )
 
 type (
@@ -148,7 +205,19 @@ type ACTCTX struct {
 type SECURITY_ATTRIBUTES struct {
 	NLength              uint32
 	LPSecurityDescriptor *uint16
-	BInheritHandle       bool
+	BInheritHandle       int32
+}
+
+type OVERLAPPED_OFFSET struct {
+	Offset uint32
+	OffsetHigh uint32
+}
+
+type OVERLAPPED struct {
+	Internal uint32
+	InternalHigh uint32
+	Overlapped OVERLAPPED_OFFSET
+	HEvent HANDLE
 }
 
 func init() {
@@ -191,6 +260,9 @@ func init() {
 	createMutex = libkernel32.NewProc("CreateMutexW")
 	releaseMutex = libkernel32.NewProc("ReleaseMutex")
 	expandEnvironmentStrings = libkernel32.NewProc("ExpandEnvironmentStringsW")
+	createFile = libkernel32.NewProc("CreateFileW")
+	writeFile = libkernel32.NewProc("WriteFile")
+	readFile = libkernel32.NewProc("ReadFile")
 }
 
 func ActivateActCtx(ctx HANDLE) (uintptr, bool) {
@@ -496,7 +568,7 @@ func OpenProcess(dwDesiredAccess, bInheritHandle, dwProcessId uintptr) HANDLE {
 		dwProcessId)
 
 	return HANDLE(ret)
-} 
+}
 
 func CreateMutex(attr uintptr, bInitialOwner BOOL, lpName string) (HANDLE, syscall.Errno) {
 	name, _ := syscall.UTF16PtrFromString(lpName)
@@ -517,4 +589,46 @@ func ExpandEnvironmentStrings(LPCWSTR string, LPWSTR *uint16, nSize uint32) uint
 		uintptr(nSize))
 
 	return uint32(ret)
-} 
+}
+
+func CreateFile(lpFileName string, dwDesiredAccess, dwShareMode uint32, lpSecurityAttributes *SECURITY_ATTRIBUTES,
+	dwCreationDisposition, dwFlagsAndAttributes uint32, hTemplateFile HANDLE) HANDLE {
+	fileName, _ := syscall.UTF16PtrFromString(lpFileName)
+
+	ret, _, _ := syscall.Syscall9(createFile.Addr(), 7,
+		uintptr(unsafe.Pointer(fileName)),
+		uintptr(dwDesiredAccess),
+		uintptr(dwShareMode),
+		uintptr(unsafe.Pointer(lpSecurityAttributes)),
+		uintptr(dwCreationDisposition),
+		uintptr(dwFlagsAndAttributes),
+		uintptr(hTemplateFile),
+		0,
+		0)
+
+	return HANDLE(ret)
+}
+
+func WriteFile(hFile HANDLE, lpBuffer uintptr, nNumberOfBytesToWrite uint32, lpNumberOfBytesWritten *uint32, lpOverlapped *OVERLAPPED) BOOL {
+	ret, _, _ := syscall.Syscall6(writeFile.Addr(), 5,
+		uintptr(hFile),
+		uintptr(lpBuffer),
+		uintptr(nNumberOfBytesToWrite),
+		uintptr(unsafe.Pointer(lpNumberOfBytesWritten)),
+		uintptr(unsafe.Pointer(lpOverlapped)),
+		0)
+
+	return BOOL(ret)
+}
+
+func ReadFile(hFile HANDLE, lpBuffer uintptr, nNumberOfBytesToRead uint32, lpNumberOfBytesRead *uint32, lpOverlapped *OVERLAPPED) BOOL {
+	ret, _, _ := syscall.Syscall6(readFile.Addr(), 5,
+		uintptr(hFile),
+		uintptr(lpBuffer),
+		uintptr(nNumberOfBytesToRead),
+		uintptr(unsafe.Pointer(lpNumberOfBytesRead)),
+		uintptr(unsafe.Pointer(lpOverlapped)),
+		0)
+
+	return BOOL(ret)
+}
