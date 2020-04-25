@@ -107,6 +107,21 @@ const (
 	STD_ERROR_HANDLE  = 0xfffffff4
 )
 
+const (
+	HF32_DEFAULT	    = 1
+	HF32_SHARED	        = 2
+	LF32_FIXED	        = 0x1
+	LF32_FREE	        = 0x2
+	LF32_MOVEABLE	    = 0x4
+	MAX_MODULE_NAME32	= 255
+	TH32CS_SNAPHEAPLIST	= 0x1
+	TH32CS_SNAPPROCESS	= 0x2
+	TH32CS_SNAPTHREAD	= 0x4
+	TH32CS_SNAPMODULE	= 0x8
+	TH32CS_SNAPALL	    = TH32CS_SNAPHEAPLIST|TH32CS_SNAPPROCESS|TH32CS_SNAPTHREAD|TH32CS_SNAPMODULE
+	TH32CS_INHERIT	    = 0x80000000
+)
+
 var (
 	// Library
 	libkernel32 *windows.LazyDLL
@@ -150,6 +165,9 @@ var (
 	createFile                         *windows.LazyProc
 	writeFile                          *windows.LazyProc
 	readFile                           *windows.LazyProc
+	createToolhelp32Snapshot           *windows.LazyProc
+	module32First                      *windows.LazyProc
+	module32Next                       *windows.LazyProc
 )
 
 type (
@@ -220,6 +238,19 @@ type OVERLAPPED struct {
 	HEvent HANDLE
 }
 
+type MODULEENTRY32 struct {
+	DwSize uint32
+	Th32ModuleID uint32
+	Th32ProcessID uint32
+	GlblcntUsage uint32
+	ProccntUsage uint32
+	ModBaseAddr *byte
+	ModBaseSize uint32
+	HModule HMODULE
+	SzModule [MAX_MODULE_NAME32 + 1]byte;
+	SzExePath [MAX_PATH]byte;
+}
+
 func init() {
 	// Library
 	libkernel32 = windows.NewLazySystemDLL("kernel32.dll")
@@ -263,6 +294,9 @@ func init() {
 	createFile = libkernel32.NewProc("CreateFileW")
 	writeFile = libkernel32.NewProc("WriteFile")
 	readFile = libkernel32.NewProc("ReadFile")
+	createToolhelp32Snapshot = libkernel32.NewProc("CreateToolhelp32Snapshot")
+	module32First = libkernel32.NewProc("Module32First")
+	module32Next = libkernel32.NewProc("Module32Next")
 }
 
 func ActivateActCtx(ctx HANDLE) (uintptr, bool) {
@@ -631,4 +665,31 @@ func ReadFile(hFile HANDLE, lpBuffer uintptr, nNumberOfBytesToRead uint32, lpNum
 		0)
 
 	return BOOL(ret)
+}
+
+func CreateToolhelp32Snapshot(dwFlags, th32ProcessID uint32) HANDLE {
+	ret, _, _ := syscall.Syscall(createToolhelp32Snapshot.Addr(), 2,
+		uintptr(dwFlags),
+		uintptr(th32ProcessID),
+		0)
+
+	return HANDLE(ret)
+}
+
+func Module32First(hSnapshot HANDLE, lpme *MODULEENTRY32) HANDLE {
+	ret, _, _ := syscall.Syscall(module32First.Addr(), 2,
+		uintptr(hSnapshot),
+		uintptr(unsafe.Pointer(lpme)),
+		0)
+
+	return HANDLE(ret)
+}
+
+func Module32Next(hSnapshot HANDLE, lpme *MODULEENTRY32) HANDLE {
+	ret, _, _ := syscall.Syscall(module32Next.Addr(), 2,
+		uintptr(hSnapshot),
+		uintptr(unsafe.Pointer(lpme)),
+		0)
+
+	return HANDLE(ret)
 }
