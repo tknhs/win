@@ -7,9 +7,10 @@
 package win
 
 import (
-	"golang.org/x/sys/windows"
 	"syscall"
 	"unsafe"
+
+	"golang.org/x/sys/windows"
 )
 
 const KEY_READ REGSAM = 0x20019
@@ -76,29 +77,29 @@ const (
 )
 
 const (
-	DELETE                   = 0x00010000
-	READ_CONTROL             = 0x00020000
-	WRITE_DAC                = 0x00040000
-	WRITE_OWNER              = 0x00080000
-	SYNCHRONIZE              = 0x00100000
-	STANDARD_RIGHTS_READ     = READ_CONTROL
-	STANDARD_RIGHTS_WRITE    = READ_CONTROL
-	STANDARD_RIGHTS_EXECUTE  = READ_CONTROL
-	STANDARD_RIGHTS_ALL      = 0x001f0000
-	SPECIFIC_RIGHTS_ALL      = 0x0000ffff
+	DELETE                  = 0x00010000
+	READ_CONTROL            = 0x00020000
+	WRITE_DAC               = 0x00040000
+	WRITE_OWNER             = 0x00080000
+	SYNCHRONIZE             = 0x00100000
+	STANDARD_RIGHTS_READ    = READ_CONTROL
+	STANDARD_RIGHTS_WRITE   = READ_CONTROL
+	STANDARD_RIGHTS_EXECUTE = READ_CONTROL
+	STANDARD_RIGHTS_ALL     = 0x001f0000
+	SPECIFIC_RIGHTS_ALL     = 0x0000ffff
 )
 
 const (
 	SERVICES_ACTIVE_DATABASE = "ServicesActive"
 	SERVICES_FAILED_DATABASE = "ServicesFailed"
 
-	SC_GROUP_IDENTIFIER      = '+'
+	SC_GROUP_IDENTIFIER = '+'
 
-	SERVICE_NO_CHANGE        = 0xffffffff
+	SERVICE_NO_CHANGE = 0xffffffff
 
-	SERVICE_ACTIVE           = 0x00000001
-	SERVICE_INACTIVE         = 0x00000002
-	SERVICE_STATE_ALL        = SERVICE_ACTIVE | SERVICE_INACTIVE
+	SERVICE_ACTIVE    = 0x00000001
+	SERVICE_INACTIVE  = 0x00000002
+	SERVICE_STATE_ALL = SERVICE_ACTIVE | SERVICE_INACTIVE
 )
 
 const (
@@ -158,82 +159,82 @@ const (
 	SERVICE_CONFIG_TRIGGER_INFO             = 8
 	SERVICE_CONFIG_PREFERRED_NODE           = 9
 
-	SERVICE_NOTIFY_STATUS_CHANGE_1          = 1
-	SERVICE_NOTIFY_STATUS_CHANGE_2          = 2
+	SERVICE_NOTIFY_STATUS_CHANGE_1 = 1
+	SERVICE_NOTIFY_STATUS_CHANGE_2 = 2
 
-	SERVICE_NOTIFY_STATUS_CHANGE            = SERVICE_NOTIFY_STATUS_CHANGE_2
+	SERVICE_NOTIFY_STATUS_CHANGE = SERVICE_NOTIFY_STATUS_CHANGE_2
 
-	SERVICE_NOTIFY_STOPPED                  = 0x00000001
-	SERVICE_NOTIFY_START_PENDING            = 0x00000002
-	SERVICE_NOTIFY_STOP_PENDING             = 0x00000004
-	SERVICE_NOTIFY_RUNNING                  = 0x00000008
-	SERVICE_NOTIFY_CONTINUE_PENDING         = 0x00000010
-	SERVICE_NOTIFY_PAUSE_PENDING            = 0x00000020
-	SERVICE_NOTIFY_PAUSED                   = 0x00000040
-	SERVICE_NOTIFY_CREATED                  = 0x00000080
-	SERVICE_NOTIFY_DELETED                  = 0x00000100
-	SERVICE_NOTIFY_DELETE_PENDING           = 0x00000200
+	SERVICE_NOTIFY_STOPPED          = 0x00000001
+	SERVICE_NOTIFY_START_PENDING    = 0x00000002
+	SERVICE_NOTIFY_STOP_PENDING     = 0x00000004
+	SERVICE_NOTIFY_RUNNING          = 0x00000008
+	SERVICE_NOTIFY_CONTINUE_PENDING = 0x00000010
+	SERVICE_NOTIFY_PAUSE_PENDING    = 0x00000020
+	SERVICE_NOTIFY_PAUSED           = 0x00000040
+	SERVICE_NOTIFY_CREATED          = 0x00000080
+	SERVICE_NOTIFY_DELETED          = 0x00000100
+	SERVICE_NOTIFY_DELETE_PENDING   = 0x00000200
 
-	SERVICE_STOP_REASON_FLAG_MIN                            = 0x00000000
-	SERVICE_STOP_REASON_FLAG_UNPLANNED                      = 0x10000000
-	SERVICE_STOP_REASON_FLAG_CUSTOM                         = 0x20000000
-	SERVICE_STOP_REASON_FLAG_PLANNED                        = 0x40000000
-	SERVICE_STOP_REASON_FLAG_MAX                            = 0x80000000
+	SERVICE_STOP_REASON_FLAG_MIN       = 0x00000000
+	SERVICE_STOP_REASON_FLAG_UNPLANNED = 0x10000000
+	SERVICE_STOP_REASON_FLAG_CUSTOM    = 0x20000000
+	SERVICE_STOP_REASON_FLAG_PLANNED   = 0x40000000
+	SERVICE_STOP_REASON_FLAG_MAX       = 0x80000000
 
-	SERVICE_STOP_REASON_MAJOR_MIN                           = 0x00000000
-	SERVICE_STOP_REASON_MAJOR_OTHER                         = 0x00010000
-	SERVICE_STOP_REASON_MAJOR_HARDWARE                      = 0x00020000
-	SERVICE_STOP_REASON_MAJOR_OPERATINGSYSTEM               = 0x00030000
-	SERVICE_STOP_REASON_MAJOR_SOFTWARE                      = 0x00040000
-	SERVICE_STOP_REASON_MAJOR_APPLICATION                   = 0x00050000
-	SERVICE_STOP_REASON_MAJOR_NONE                          = 0x00060000
-	SERVICE_STOP_REASON_MAJOR_MAX                           = 0x00070000
-	SERVICE_STOP_REASON_MAJOR_MIN_CUSTOM                    = 0x00400000
-	SERVICE_STOP_REASON_MAJOR_MAX_CUSTOM                    = 0x00ff0000
+	SERVICE_STOP_REASON_MAJOR_MIN             = 0x00000000
+	SERVICE_STOP_REASON_MAJOR_OTHER           = 0x00010000
+	SERVICE_STOP_REASON_MAJOR_HARDWARE        = 0x00020000
+	SERVICE_STOP_REASON_MAJOR_OPERATINGSYSTEM = 0x00030000
+	SERVICE_STOP_REASON_MAJOR_SOFTWARE        = 0x00040000
+	SERVICE_STOP_REASON_MAJOR_APPLICATION     = 0x00050000
+	SERVICE_STOP_REASON_MAJOR_NONE            = 0x00060000
+	SERVICE_STOP_REASON_MAJOR_MAX             = 0x00070000
+	SERVICE_STOP_REASON_MAJOR_MIN_CUSTOM      = 0x00400000
+	SERVICE_STOP_REASON_MAJOR_MAX_CUSTOM      = 0x00ff0000
 
-	SERVICE_STOP_REASON_MINOR_MIN                           = 0x00000000
-	SERVICE_STOP_REASON_MINOR_OTHER                         = 0x00000001
-	SERVICE_STOP_REASON_MINOR_MAINTENANCE                   = 0x00000002
-	SERVICE_STOP_REASON_MINOR_INSTALLATION                  = 0x00000003
-	SERVICE_STOP_REASON_MINOR_UPGRADE                       = 0x00000004
-	SERVICE_STOP_REASON_MINOR_RECONFIG                      = 0x00000005
-	SERVICE_STOP_REASON_MINOR_HUNG                          = 0x00000006
-	SERVICE_STOP_REASON_MINOR_UNSTABLE                      = 0x00000007
-	SERVICE_STOP_REASON_MINOR_DISK                          = 0x00000008
-	SERVICE_STOP_REASON_MINOR_NETWORKCARD                   = 0x00000009
-	SERVICE_STOP_REASON_MINOR_ENVIRONMENT                   = 0x0000000a
-	SERVICE_STOP_REASON_MINOR_HARDWARE_DRIVER               = 0x0000000b
-	SERVICE_STOP_REASON_MINOR_OTHERDRIVER                   = 0x0000000c
-	SERVICE_STOP_REASON_MINOR_SERVICEPACK                   = 0x0000000d
-	SERVICE_STOP_REASON_MINOR_SOFTWARE_UPDATE               = 0x0000000e
-	SERVICE_STOP_REASON_MINOR_SECURITYFIX                   = 0x0000000f
-	SERVICE_STOP_REASON_MINOR_SECURITY                      = 0x00000010
-	SERVICE_STOP_REASON_MINOR_NETWORK_CONNECTIVITY          = 0x00000011
-	SERVICE_STOP_REASON_MINOR_WMI                           = 0x00000012
-	SERVICE_STOP_REASON_MINOR_SERVICEPACK_UNINSTALL         = 0x00000013
-	SERVICE_STOP_REASON_MINOR_SOFTWARE_UPDATE_UNINSTALL     = 0x00000014
-	SERVICE_STOP_REASON_MINOR_SECURITYFIX_UNINSTALL         = 0x00000015
-	SERVICE_STOP_REASON_MINOR_MMC                           = 0x00000016
-	SERVICE_STOP_REASON_MINOR_NONE                          = 0x00000017
-	SERVICE_STOP_REASON_MINOR_MAX                           = 0x00000018
-	SERVICE_STOP_REASON_MINOR_MIN_CUSTOM                    = 0x00000100
-	SERVICE_STOP_REASON_MINOR_MAX_CUSTOM                    = 0x0000FFFF
+	SERVICE_STOP_REASON_MINOR_MIN                       = 0x00000000
+	SERVICE_STOP_REASON_MINOR_OTHER                     = 0x00000001
+	SERVICE_STOP_REASON_MINOR_MAINTENANCE               = 0x00000002
+	SERVICE_STOP_REASON_MINOR_INSTALLATION              = 0x00000003
+	SERVICE_STOP_REASON_MINOR_UPGRADE                   = 0x00000004
+	SERVICE_STOP_REASON_MINOR_RECONFIG                  = 0x00000005
+	SERVICE_STOP_REASON_MINOR_HUNG                      = 0x00000006
+	SERVICE_STOP_REASON_MINOR_UNSTABLE                  = 0x00000007
+	SERVICE_STOP_REASON_MINOR_DISK                      = 0x00000008
+	SERVICE_STOP_REASON_MINOR_NETWORKCARD               = 0x00000009
+	SERVICE_STOP_REASON_MINOR_ENVIRONMENT               = 0x0000000a
+	SERVICE_STOP_REASON_MINOR_HARDWARE_DRIVER           = 0x0000000b
+	SERVICE_STOP_REASON_MINOR_OTHERDRIVER               = 0x0000000c
+	SERVICE_STOP_REASON_MINOR_SERVICEPACK               = 0x0000000d
+	SERVICE_STOP_REASON_MINOR_SOFTWARE_UPDATE           = 0x0000000e
+	SERVICE_STOP_REASON_MINOR_SECURITYFIX               = 0x0000000f
+	SERVICE_STOP_REASON_MINOR_SECURITY                  = 0x00000010
+	SERVICE_STOP_REASON_MINOR_NETWORK_CONNECTIVITY      = 0x00000011
+	SERVICE_STOP_REASON_MINOR_WMI                       = 0x00000012
+	SERVICE_STOP_REASON_MINOR_SERVICEPACK_UNINSTALL     = 0x00000013
+	SERVICE_STOP_REASON_MINOR_SOFTWARE_UPDATE_UNINSTALL = 0x00000014
+	SERVICE_STOP_REASON_MINOR_SECURITYFIX_UNINSTALL     = 0x00000015
+	SERVICE_STOP_REASON_MINOR_MMC                       = 0x00000016
+	SERVICE_STOP_REASON_MINOR_NONE                      = 0x00000017
+	SERVICE_STOP_REASON_MINOR_MAX                       = 0x00000018
+	SERVICE_STOP_REASON_MINOR_MIN_CUSTOM                = 0x00000100
+	SERVICE_STOP_REASON_MINOR_MAX_CUSTOM                = 0x0000FFFF
 
-	SERVICE_CONTROL_STATUS_REASON_INFO      = 1
+	SERVICE_CONTROL_STATUS_REASON_INFO = 1
 
-	SERVICE_SID_TYPE_NONE                                   = 0x00000000
-	SERVICE_SID_TYPE_UNRESTRICTED                           = 0x00000001
-	SERVICE_SID_TYPE_RESTRICTED                             = 0x00000002 | SERVICE_SID_TYPE_UNRESTRICTED
+	SERVICE_SID_TYPE_NONE         = 0x00000000
+	SERVICE_SID_TYPE_UNRESTRICTED = 0x00000001
+	SERVICE_SID_TYPE_RESTRICTED   = 0x00000002 | SERVICE_SID_TYPE_UNRESTRICTED
 
-	SERVICE_TRIGGER_TYPE_DEVICE_INTERFACE_ARRIVAL               = 1
-	SERVICE_TRIGGER_TYPE_IP_ADDRESS_AVAILABILITY                = 2
-	SERVICE_TRIGGER_TYPE_DOMAIN_JOIN                            = 3
-	SERVICE_TRIGGER_TYPE_FIREWALL_PORT_EVENT                    = 4
-	SERVICE_TRIGGER_TYPE_GROUP_POLICY                           = 5
-	SERVICE_TRIGGER_TYPE_CUSTOM                                 = 20
+	SERVICE_TRIGGER_TYPE_DEVICE_INTERFACE_ARRIVAL = 1
+	SERVICE_TRIGGER_TYPE_IP_ADDRESS_AVAILABILITY  = 2
+	SERVICE_TRIGGER_TYPE_DOMAIN_JOIN              = 3
+	SERVICE_TRIGGER_TYPE_FIREWALL_PORT_EVENT      = 4
+	SERVICE_TRIGGER_TYPE_GROUP_POLICY             = 5
+	SERVICE_TRIGGER_TYPE_CUSTOM                   = 20
 
-	SERVICE_TRIGGER_DATA_TYPE_BINARY                            = 1
-	SERVICE_TRIGGER_DATA_TYPE_STRING                            = 2
+	SERVICE_TRIGGER_DATA_TYPE_BINARY = 1
+	SERVICE_TRIGGER_DATA_TYPE_STRING = 2
 )
 
 type (
@@ -243,17 +244,22 @@ type (
 )
 
 type SERVICE_DESCRIPTION struct {
-    LpDescription *uint16
+	LpDescription *uint16
 }
 
 type SERVICE_STATUS struct {
-	DwServiceType uint32
-	DwCurrentState uint32
-	DwControlsAccepted uint32
-	DwWin32ExitCode uint32
+	DwServiceType             uint32
+	DwCurrentState            uint32
+	DwControlsAccepted        uint32
+	DwWin32ExitCode           uint32
 	DwServiceSpecificExitCode uint32
-	DwCheckPoint uint32
-	DwWaitHint uint32
+	DwCheckPoint              uint32
+	DwWaitHint                uint32
+}
+
+type SERVICE_TABLE_ENTRY struct {
+	LpServiceName *uint16
+	LpServiceProc uintptr
 }
 
 const (
@@ -272,7 +278,6 @@ const (
 	REG_RESOURCE_REQUIREMENTS_LIST = 10
 	REG_QWORD                      = 11 // 64-bit number
 	REG_QWORD_LITTLE_ENDIAN        = 11 // 64-bit number (same as REG_QWORD)
-
 )
 
 var (
@@ -280,22 +285,25 @@ var (
 	libadvapi32 *windows.LazyDLL
 
 	// Functions
-	regCloseKey           *windows.LazyProc
-	regOpenKeyEx          *windows.LazyProc
-	regQueryValueEx       *windows.LazyProc
-	regEnumValue          *windows.LazyProc
-	regSetValueEx         *windows.LazyProc
-	openSCManager         *windows.LazyProc
-	createService         *windows.LazyProc
-	openService           *windows.LazyProc
-	deleteService         *windows.LazyProc
-	closeServiceHandle    *windows.LazyProc
-	lockServiceDatabase   *windows.LazyProc
-	unlockServiceDatabase *windows.LazyProc
-	changeServiceConfig2  *windows.LazyProc
-	startService          *windows.LazyProc
-	controlService        *windows.LazyProc
-	queryServiceStatus    *windows.LazyProc
+	regCloseKey                  *windows.LazyProc
+	regOpenKeyEx                 *windows.LazyProc
+	regQueryValueEx              *windows.LazyProc
+	regEnumValue                 *windows.LazyProc
+	regSetValueEx                *windows.LazyProc
+	openSCManager                *windows.LazyProc
+	createService                *windows.LazyProc
+	openService                  *windows.LazyProc
+	deleteService                *windows.LazyProc
+	closeServiceHandle           *windows.LazyProc
+	lockServiceDatabase          *windows.LazyProc
+	unlockServiceDatabase        *windows.LazyProc
+	changeServiceConfig2         *windows.LazyProc
+	startService                 *windows.LazyProc
+	controlService               *windows.LazyProc
+	queryServiceStatus           *windows.LazyProc
+	startServiceCtrlDispatcher   *windows.LazyProc
+	registerServiceCtrlHandlerEx *windows.LazyProc
+	setServiceStatus             *windows.LazyProc
 )
 
 func init() {
@@ -319,6 +327,9 @@ func init() {
 	startService = libadvapi32.NewProc("StartServiceW")
 	controlService = libadvapi32.NewProc("ControlService")
 	queryServiceStatus = libadvapi32.NewProc("QueryServiceStatus")
+	startServiceCtrlDispatcher = libadvapi32.NewProc("StartServiceCtrlDispatcherW")
+	registerServiceCtrlHandlerEx = libadvapi32.NewProc("RegisterServiceCtrlHandlerExW")
+	setServiceStatus = libadvapi32.NewProc("SetServiceStatus")
 }
 
 func RegCloseKey(hKey HKEY) int32 {
@@ -377,16 +388,6 @@ func RegSetValueEx(hKey HKEY, lpValueName *uint16, lpReserved, lpDataType uint64
 		uintptr(unsafe.Pointer(lpData)),
 		uintptr(cbData))
 	return int32(ret)
-}
-
-func UTF16PtrFromString(str *string) *uint16 {
-	if str == nil {
-		return nil
-	}
-
-	result, _ := syscall.UTF16PtrFromString(*str)
-
-	return result
 }
 
 func OpenSCManager(lpMachineName, lpDatabaseName *string, dwDesiredAccess uint32) HANDLE {
@@ -500,6 +501,32 @@ func ControlService(hService HANDLE, dwControl uint32, lpServiceStatus *SERVICE_
 func QueryServiceStatus(hService HANDLE, lpServiceStatus *SERVICE_STATUS) BOOL {
 	ret, _, _ := syscall.Syscall(queryServiceStatus.Addr(), 2,
 		uintptr(hService),
+		uintptr(unsafe.Pointer(lpServiceStatus)),
+		0)
+	return BOOL(ret)
+}
+
+func StartServiceCtrlDispatcher(lpServiceStartTable *SERVICE_TABLE_ENTRY) BOOL {
+	ret, _, _ := syscall.Syscall(startServiceCtrlDispatcher.Addr(), 1,
+		uintptr(unsafe.Pointer(lpServiceStartTable)),
+		0,
+		0)
+	return BOOL(ret)
+}
+
+func RegisterServiceCtrlHandlerEx(lpServiceName string, lpHandlerProc uintptr, lpContext uintptr) HANDLE {
+	serviceName, _ := syscall.UTF16PtrFromString(lpServiceName)
+
+	ret, _, _ := syscall.Syscall(registerServiceCtrlHandlerEx.Addr(), 3,
+		uintptr(unsafe.Pointer(serviceName)),
+		lpHandlerProc,
+		lpContext)
+	return HANDLE(ret)
+}
+
+func SetServiceStatus(hServiceStatus HANDLE, lpServiceStatus *SERVICE_STATUS) BOOL {
+	ret, _, _ := syscall.Syscall(setServiceStatus.Addr(), 2,
+		uintptr(hServiceStatus),
 		uintptr(unsafe.Pointer(lpServiceStatus)),
 		0)
 	return BOOL(ret)

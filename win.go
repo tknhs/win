@@ -89,3 +89,13 @@ func BoolToBOOL(value bool) BOOL {
 
 	return 0
 }
+
+func UTF16PtrFromString(str *string) *uint16 {
+	if str == nil {
+		return nil
+	}
+
+	result, _ := syscall.UTF16PtrFromString(*str)
+
+	return result
+}

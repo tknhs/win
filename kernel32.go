@@ -122,6 +122,11 @@ const (
 	TH32CS_INHERIT	    = 0x80000000
 )
 
+const (
+	WAIT_OBJECT_0 = 0
+	INFINITE	  = 0xFFFFFFFF
+)
+
 var (
 	// Library
 	libkernel32 *windows.LazyDLL
@@ -168,6 +173,11 @@ var (
 	createToolhelp32Snapshot           *windows.LazyProc
 	module32First                      *windows.LazyProc
 	module32Next                       *windows.LazyProc
+	waitForSingleObject                *windows.LazyProc
+	waitForMultipleObjects             *windows.LazyProc
+	createEvent                        *windows.LazyProc
+	setEvent                           *windows.LazyProc
+	resetEvent                         *windows.LazyProc
 )
 
 type (
@@ -222,8 +232,8 @@ type ACTCTX struct {
 
 type SECURITY_ATTRIBUTES struct {
 	NLength              uint32
-	LPSecurityDescriptor *uint16
-	BInheritHandle       int32
+	LPSecurityDescriptor uintptr
+	BInheritHandle       BOOL
 }
 
 type OVERLAPPED_OFFSET struct {
@@ -297,6 +307,11 @@ func init() {
 	createToolhelp32Snapshot = libkernel32.NewProc("CreateToolhelp32Snapshot")
 	module32First = libkernel32.NewProc("Module32First")
 	module32Next = libkernel32.NewProc("Module32Next")
+	waitForSingleObject = libkernel32.NewProc("WaitForSingleObject")
+	waitForMultipleObjects = libkernel32.NewProc("WaitForMultipleObjects")
+	createEvent = libkernel32.NewProc("CreateEventW")
+	setEvent = libkernel32.NewProc("SetEvent")
+	resetEvent = libkernel32.NewProc("ResetEvent")
 }
 
 func ActivateActCtx(ctx HANDLE) (uintptr, bool) {
@@ -692,4 +707,57 @@ func Module32Next(hSnapshot HANDLE, lpme *MODULEENTRY32) HANDLE {
 		0)
 
 	return HANDLE(ret)
+}
+
+func WaitForSingleObject(hHandle HANDLE, dwMilliseconds uint32) uint32 {
+	ret, _, _ := syscall.Syscall(waitForSingleObject.Addr(), 2,
+		uintptr(hHandle),
+		uintptr(dwMilliseconds),
+		0)
+
+	return uint32(ret)
+}
+
+func WaitForMultipleObjects(nCount uint32, lpHandles *HANDLE, bWaitAll BOOL, dwMilliseconds uint32) uint32 {
+	ret, _, _ := syscall.Syscall6(waitForMultipleObjects.Addr(), 4,
+		uintptr(nCount),
+		uintptr(unsafe.Pointer(lpHandles)),
+		uintptr(bWaitAll),
+		uintptr(dwMilliseconds),
+		0,
+		0)
+
+	return uint32(ret)
+}
+
+func CreateEvent(lpEventAttributes *SECURITY_ATTRIBUTES, bManualReset BOOL, bInitialState BOOL, lpName *string) HANDLE {
+	name := UTF16PtrFromString(lpName)
+
+	ret, _, _ := syscall.Syscall6(createEvent.Addr(), 4,
+		uintptr(unsafe.Pointer(lpEventAttributes)),
+		uintptr(bManualReset),
+		uintptr(bInitialState),
+		uintptr(unsafe.Pointer(name)),
+		0,
+		0)
+
+	return HANDLE(ret)
+}
+
+func SetEvent(hEvent HANDLE) BOOL {
+	ret, _, _ := syscall.Syscall(setEvent.Addr(), 1,
+		uintptr(hEvent),
+		0,
+		0)
+
+	return BOOL(ret)
+}
+
+func ResetEvent(hEvent HANDLE) BOOL {
+	ret, _, _ := syscall.Syscall(resetEvent.Addr(), 1,
+		uintptr(hEvent),
+		0,
+		0)
+
+	return BOOL(ret)
 }
