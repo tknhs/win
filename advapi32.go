@@ -237,6 +237,31 @@ const (
 	SERVICE_TRIGGER_DATA_TYPE_STRING = 2
 )
 
+const (
+	NO_MULTIPLE_TRUSTEE = iota
+	TRUSTEE_IS_IMPERSONATE
+)
+
+const (
+	TRUSTEE_IS_SID = iota
+	TRUSTEE_IS_NAME
+	TRUSTEE_BAD_FORM
+	TRUSTEE_IS_OBJECTS_AND_SID
+	TRUSTEE_IS_OBJECTS_AND_NAME
+)
+
+const (
+	TRUSTEE_IS_UNKNOWN = iota
+	TRUSTEE_IS_USER
+	TRUSTEE_IS_GROUP
+	TRUSTEE_IS_DOMAIN
+	TRUSTEE_IS_ALIAS
+	TRUSTEE_IS_WELL_KNOWN_GROUP
+	TRUSTEE_IS_DELETED
+	TRUSTEE_IS_INVALID
+	TRUSTEE_IS_COMPUTER
+)
+
 type (
 	ACCESS_MASK uint32
 	HKEY        HANDLE
@@ -262,6 +287,42 @@ type SERVICE_TABLE_ENTRY struct {
 	LpServiceProc uintptr
 }
 
+type SECURITY_DESCRIPTOR_CONTROL uint16
+
+type ACL struct {
+	AclRevision byte
+	Sbz1        byte
+	AclSize     uint16
+	AceCount    uint16
+	Sbz2        uint16
+}
+
+type SECURITY_DESCRIPTOR struct {
+	Revision byte
+	Sbz1     byte
+	Control  SECURITY_DESCRIPTOR_CONTROL
+	Owner    uintptr
+	Group    uintptr
+	Sacl     *ACL
+	Dacl     *ACL
+}
+
+type TRUSTEE struct {
+	pMultipleTrustee         *TRUSTEE
+	MultipleTrusteeOperation uint32
+	TrusteeForm              uint32
+	TrusteeType              uint32
+	pUnion                   uintptr
+	ptstrName                *uint16
+}
+
+type EXPLICIT_ACCESS struct {
+	grfAccessPermissions uint32
+	grfAccessMode        uint32
+	grfInheritance       uint32
+	Trustee              TRUSTEE
+}
+
 const (
 	REG_NONE      uint64 = 0 // No value type
 	REG_SZ               = 1 // Unicode nul terminated string
@@ -278,6 +339,117 @@ const (
 	REG_RESOURCE_REQUIREMENTS_LIST = 10
 	REG_QWORD                      = 11 // 64-bit number
 	REG_QWORD_LITTLE_ENDIAN        = 11 // 64-bit number (same as REG_QWORD)
+)
+
+const (
+	APPLICATION_ERROR_MASK             = 0x20000000
+	ERROR_SEVERITY_SUCCESS             = 0x00000000
+	ERROR_SEVERITY_INFORMATIONAL       = 0x40000000
+	ERROR_SEVERITY_WARNING             = 0x80000000
+	ERROR_SEVERITY_ERROR               = 0xC0000000
+	COMPRESSION_FORMAT_NONE            = 0
+	COMPRESSION_FORMAT_DEFAULT         = 1
+	COMPRESSION_FORMAT_LZNT1           = 2
+	COMPRESSION_ENGINE_STANDARD        = 0
+	COMPRESSION_ENGINE_MAXIMUM         = 256
+	ACCESS_ALLOWED_ACE_TYPE            = 0
+	ACCESS_DENIED_ACE_TYPE             = 1
+	ANYSIZE_ARRAY                      = 1
+	SYSTEM_AUDIT_ACE_TYPE              = 2
+	SYSTEM_ALARM_ACE_TYPE              = 3
+	OBJECT_INHERIT_ACE                 = 1
+	CONTAINER_INHERIT_ACE              = 2
+	NO_PROPAGATE_INHERIT_ACE           = 4
+	INHERIT_ONLY_ACE                   = 8
+	VALID_INHERIT_FLAGS                = 16
+	SUCCESSFUL_ACCESS_ACE_FLAG         = 64
+	FAILED_ACCESS_ACE_FLAG             = 128
+	ACCESS_SYSTEM_SECURITY             = 0x1000000
+	MAXIMUM_ALLOWED                    = 0x2000000
+	FILE_READ_DATA                     = 1
+	FILE_LIST_DIRECTORY                = 1
+	FILE_WRITE_DATA                    = 2
+	FILE_ADD_FILE                      = 2
+	FILE_APPEND_DATA                   = 4
+	FILE_ADD_SUBDIRECTORY              = 4
+	FILE_CREATE_PIPE_INSTANCE          = 4
+	FILE_READ_EA                       = 8
+	FILE_READ_PROPERTIES               = 8
+	FILE_WRITE_EA                      = 16
+	FILE_WRITE_PROPERTIES              = 16
+	FILE_EXECUTE                       = 32
+	FILE_TRAVERSE                      = 32
+	FILE_DELETE_CHILD                  = 64
+	FILE_READ_ATTRIBUTES               = 128
+	FILE_WRITE_ATTRIBUTES              = 256
+	FILE_ALL_ACCESS                    = STANDARD_RIGHTS_REQUIRED | SYNCHRONIZE | 0x1FF
+	FILE_GENERIC_READ                  = STANDARD_RIGHTS_READ | FILE_READ_DATA | FILE_READ_ATTRIBUTES | FILE_READ_EA | SYNCHRONIZE
+	FILE_GENERIC_WRITE                 = STANDARD_RIGHTS_WRITE | FILE_WRITE_DATA | FILE_WRITE_ATTRIBUTES | FILE_WRITE_EA | FILE_APPEND_DATA | SYNCHRONIZE
+	FILE_GENERIC_EXECUTE               = STANDARD_RIGHTS_EXECUTE | FILE_READ_ATTRIBUTES | FILE_EXECUTE | SYNCHRONIZE
+	FILE_ATTRIBUTE_ENCRYPTED           = 64
+	FILE_ATTRIBUTE_SPARSE_FILE         = 512
+	FILE_ATTRIBUTE_REPARSE_POINT       = 1024
+	FILE_ATTRIBUTE_COMPRESSED          = 2048
+	FILE_ATTRIBUTE_OFFLINE             = 0x1000
+	FILE_ATTRIBUTE_NOT_CONTENT_INDEXED = 0x2000
+	FILE_NOTIFY_CHANGE_FILE_NAME       = 1
+	FILE_NOTIFY_CHANGE_DIR_NAME        = 2
+	FILE_NOTIFY_CHANGE_ATTRIBUTES      = 4
+	FILE_NOTIFY_CHANGE_SIZE            = 8
+	FILE_NOTIFY_CHANGE_LAST_WRITE      = 16
+	FILE_NOTIFY_CHANGE_LAST_ACCESS     = 32
+	FILE_NOTIFY_CHANGE_CREATION        = 64
+	FILE_NOTIFY_CHANGE_SECURITY        = 256
+	MAILSLOT_NO_MESSAGE                = 0xffffffff
+	MAILSLOT_WAIT_FOREVER              = 0xffffffff
+	FILE_CASE_SENSITIVE_SEARCH         = 1
+	FILE_CASE_PRESERVED_NAMES          = 2
+	FILE_UNICODE_ON_DISK               = 4
+	FILE_PERSISTENT_ACLS               = 8
+	FILE_FILE_COMPRESSION              = 16
+	FILE_VOLUME_QUOTAS                 = 32
+	FILE_SUPPORTS_SPARSE_FILES         = 64
+	FILE_SUPPORTS_REPARSE_POINTS       = 128
+	FILE_SUPPORTS_REMOTE_STORAGE       = 256
+	FILE_VOLUME_IS_COMPRESSED          = 0x8000
+	FILE_SUPPORTS_OBJECT_IDS           = 0x10000
+	FILE_SUPPORTS_ENCRYPTION           = 0x20000
+	FILE_NAMED_STREAMS                 = 0x40000
+	IO_COMPLETION_MODIFY_STATE         = 2
+	IO_COMPLETION_ALL_ACCESS           = STANDARD_RIGHTS_REQUIRED | SYNCHRONIZE | 3
+	DUPLICATE_CLOSE_SOURCE             = 1
+	DUPLICATE_SAME_ACCESS              = 2
+	PROCESS_TERMINATE                  = 1
+	PROCESS_CREATE_THREAD              = 2
+	PROCESS_VM_OPERATION               = 8
+	PROCESS_VM_READ                    = 16
+	PROCESS_VM_WRITE                   = 32
+	PROCESS_DUP_HANDLE                 = 64
+	PROCESS_CREATE_PROCESS             = 128
+	PROCESS_SET_QUOTA                  = 256
+	PROCESS_SET_INFORMATION            = 512
+	PROCESS_QUERY_INFORMATION          = 1024
+	PROCESS_ALL_ACCESS                 = STANDARD_RIGHTS_REQUIRED | SYNCHRONIZE | 0xFFF
+	THREAD_TERMINATE                   = 1
+	THREAD_SUSPEND_RESUME              = 2
+	THREAD_GET_CONTEXT                 = 8
+	THREAD_SET_CONTEXT                 = 16
+	THREAD_SET_INFORMATION             = 32
+	THREAD_QUERY_INFORMATION           = 64
+	THREAD_SET_THREAD_TOKEN            = 128
+	THREAD_IMPERSONATE                 = 256
+	THREAD_DIRECT_IMPERSONATION        = 0x200
+	THREAD_ALL_ACCESS                  = STANDARD_RIGHTS_REQUIRED | SYNCHRONIZE | 0x3FF
+)
+
+const (
+	NOT_USED_ACCESS = iota
+	GRANT_ACCESS
+	SET_ACCESS
+	DENY_ACCESS
+	REVOKE_ACCESS
+	SET_AUDIT_SUCCESS
+	SET_AUDIT_FAILURE
 )
 
 var (
@@ -304,6 +476,8 @@ var (
 	startServiceCtrlDispatcher   *windows.LazyProc
 	registerServiceCtrlHandlerEx *windows.LazyProc
 	setServiceStatus             *windows.LazyProc
+	initializeSecurityDescriptor *windows.LazyProc
+	buildExplicitAccessWithName  *windows.LazyProc
 )
 
 func init() {
@@ -330,6 +504,8 @@ func init() {
 	startServiceCtrlDispatcher = libadvapi32.NewProc("StartServiceCtrlDispatcherW")
 	registerServiceCtrlHandlerEx = libadvapi32.NewProc("RegisterServiceCtrlHandlerExW")
 	setServiceStatus = libadvapi32.NewProc("SetServiceStatus")
+	initializeSecurityDescriptor = libadvapi32.NewProc("InitializeSecurityDescriptor")
+	buildExplicitAccessWithName = libadvapi32.NewProc("BuildExplicitAccessWithNameW")
 }
 
 func RegCloseKey(hKey HKEY) int32 {
@@ -530,4 +706,24 @@ func SetServiceStatus(hServiceStatus HANDLE, lpServiceStatus *SERVICE_STATUS) BO
 		uintptr(unsafe.Pointer(lpServiceStatus)),
 		0)
 	return BOOL(ret)
+}
+
+func InitializeSecurityDescriptor(pSecurityDescriptor *SECURITY_DESCRIPTOR, dwRevision uint32) BOOL {
+	ret, _, _ := syscall.Syscall(initializeSecurityDescriptor.Addr(), 2,
+		uintptr(unsafe.Pointer(pSecurityDescriptor)),
+		uintptr(dwRevision),
+		0)
+	return BOOL(ret)
+}
+
+func BuildExplicitAccessWithName(pExplicitAccess *EXPLICIT_ACCESS, pTrusteeName string, AccessPermissions uint32, AccessMode uint32, Inheritance uint32) {
+	trusteeName, _ := syscall.UTF16PtrFromString(pTrusteeName)
+
+	syscall.Syscall6(buildExplicitAccessWithName.Addr(), 5,
+		uintptr(unsafe.Pointer(pExplicitAccess)),
+		uintptr(unsafe.Pointer(trusteeName)),
+		uintptr(AccessPermissions),
+		uintptr(AccessMode),
+		uintptr(Inheritance),
+		0)
 }

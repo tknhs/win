@@ -108,23 +108,43 @@ const (
 )
 
 const (
-	HF32_DEFAULT	    = 1
-	HF32_SHARED	        = 2
-	LF32_FIXED	        = 0x1
-	LF32_FREE	        = 0x2
-	LF32_MOVEABLE	    = 0x4
-	MAX_MODULE_NAME32	= 255
-	TH32CS_SNAPHEAPLIST	= 0x1
-	TH32CS_SNAPPROCESS	= 0x2
-	TH32CS_SNAPTHREAD	= 0x4
-	TH32CS_SNAPMODULE	= 0x8
-	TH32CS_SNAPALL	    = TH32CS_SNAPHEAPLIST|TH32CS_SNAPPROCESS|TH32CS_SNAPTHREAD|TH32CS_SNAPMODULE
-	TH32CS_INHERIT	    = 0x80000000
+	HF32_DEFAULT        = 1
+	HF32_SHARED         = 2
+	LF32_FIXED          = 0x1
+	LF32_FREE           = 0x2
+	LF32_MOVEABLE       = 0x4
+	MAX_MODULE_NAME32   = 255
+	TH32CS_SNAPHEAPLIST = 0x1
+	TH32CS_SNAPPROCESS  = 0x2
+	TH32CS_SNAPTHREAD   = 0x4
+	TH32CS_SNAPMODULE   = 0x8
+	TH32CS_SNAPALL      = TH32CS_SNAPHEAPLIST | TH32CS_SNAPPROCESS | TH32CS_SNAPTHREAD | TH32CS_SNAPMODULE
+	TH32CS_INHERIT      = 0x80000000
 )
 
 const (
 	WAIT_OBJECT_0 = 0
-	INFINITE	  = 0xFFFFFFFF
+	INFINITE      = 0xFFFFFFFF
+)
+
+const (
+	PIPE_ACCESS_INBOUND  = 0x00000001
+	PIPE_ACCESS_OUTBOUND = 0x00000002
+	PIPE_ACCESS_DUPLEX   = 0x00000003
+
+	PIPE_CLIENT_END = 0x00000000
+	PIPE_SERVER_END = 0x00000001
+
+	PIPE_WAIT                  = 0x00000000
+	PIPE_NOWAIT                = 0x00000001
+	PIPE_READMODE_BYTE         = 0x00000000
+	PIPE_READMODE_MESSAGE      = 0x00000002
+	PIPE_TYPE_BYTE             = 0x00000000
+	PIPE_TYPE_MESSAGE          = 0x00000004
+	PIPE_ACCEPT_REMOTE_CLIENTS = 0x00000000
+	PIPE_REJECT_REMOTE_CLIENTS = 0x00000008
+
+	PIPE_UNLIMITED_INSTANCES = 255
 )
 
 var (
@@ -237,28 +257,28 @@ type SECURITY_ATTRIBUTES struct {
 }
 
 type OVERLAPPED_OFFSET struct {
-	Offset uint32
+	Offset     uint32
 	OffsetHigh uint32
 }
 
 type OVERLAPPED struct {
-	Internal uint32
+	Internal     uint32
 	InternalHigh uint32
-	Overlapped OVERLAPPED_OFFSET
-	HEvent HANDLE
+	Overlapped   OVERLAPPED_OFFSET
+	HEvent       HANDLE
 }
 
 type MODULEENTRY32 struct {
-	DwSize uint32
-	Th32ModuleID uint32
+	DwSize        uint32
+	Th32ModuleID  uint32
 	Th32ProcessID uint32
-	GlblcntUsage uint32
-	ProccntUsage uint32
-	ModBaseAddr *byte
-	ModBaseSize uint32
-	HModule HMODULE
-	SzModule [MAX_MODULE_NAME32 + 1]byte;
-	SzExePath [MAX_PATH]byte;
+	GlblcntUsage  uint32
+	ProccntUsage  uint32
+	ModBaseAddr   *byte
+	ModBaseSize   uint32
+	HModule       HMODULE
+	SzModule      [MAX_MODULE_NAME32 + 1]byte
+	SzExePath     [MAX_PATH]byte
 }
 
 func init() {
