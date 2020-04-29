@@ -262,6 +262,18 @@ const (
 	TRUSTEE_IS_COMPUTER
 )
 
+const (
+	SecurityAnonymous = iota
+	SecurityIdentification
+	SecurityImpersonation
+	SecurityDelegation
+)
+
+const (
+	TokenPrimary = iota + 1
+	TokenImpersonation
+)
+
 type (
 	ACCESS_MASK uint32
 	HKEY        HANDLE
@@ -321,6 +333,27 @@ type EXPLICIT_ACCESS struct {
 	grfAccessMode        uint32
 	grfInheritance       uint32
 	Trustee              TRUSTEE
+}
+
+type STARTUPINFO struct {
+	Cb              uint32
+	LpReserved      *uint16
+	LpDesktop       *uint16
+	LpTitle         *uint16
+	DwX             uint32
+	DwY             uint32
+	DwXSize         uint32
+	DwYSize         uint32
+	DwXCountChars   uint32
+	DwYCountChars   uint32
+	DwFillAttribute uint32
+	DwFlags         uint32
+	WShowWindow     uint16
+	CbReserved2     uint16
+	LpReserved2     *byte
+	HStdInput       HANDLE
+	HStdOutput      HANDLE
+	HStdError       HANDLE
 }
 
 const (
@@ -452,6 +485,38 @@ const (
 	SET_AUDIT_FAILURE
 )
 
+const (
+	TokenUser = iota + 1
+	TokenGroups
+	TokenPrivileges
+	TokenOwner
+	TokenPrimaryGroup
+	TokenDefaultDacl
+	TokenSource
+	TokenType
+	TokenImpersonationLevel
+	TokenStatistics
+	TokenRestrictedSids
+	TokenSessionId
+	TokenGroupsAndPrivileges
+	TokenSessionReference
+	TokenSandBoxInert
+	TokenAuditPolicy
+	TokenOrigin
+	TokenElevationType
+	TokenLinkedToken
+	TokenElevation
+	TokenHasRestrictions
+	TokenAccessInformation
+	TokenVirtualizationAllowed
+	TokenVirtualizationEnabled
+	TokenIntegrityLevel
+	TokenUIAccess
+	TokenMandatoryPolicy
+	TokenLogonSid
+	MaxTokenInfoClass
+)
+
 var (
 	// Library
 	libadvapi32 *windows.LazyDLL
@@ -478,6 +543,9 @@ var (
 	setServiceStatus             *windows.LazyProc
 	initializeSecurityDescriptor *windows.LazyProc
 	buildExplicitAccessWithName  *windows.LazyProc
+	getTokenInformation          *windows.LazyProc
+	duplicateTokenEx             *windows.LazyProc
+	createProcessAsUser          *windows.LazyProc
 )
 
 func init() {
@@ -506,6 +574,9 @@ func init() {
 	setServiceStatus = libadvapi32.NewProc("SetServiceStatus")
 	initializeSecurityDescriptor = libadvapi32.NewProc("InitializeSecurityDescriptor")
 	buildExplicitAccessWithName = libadvapi32.NewProc("BuildExplicitAccessWithNameW")
+	getTokenInformation = libadvapi32.NewProc("GetTokenInformation")
+	duplicateTokenEx = libadvapi32.NewProc("DuplicateTokenEx")
+	createProcessAsUser = libadvapi32.NewProc("CreateProcessAsUserW")
 }
 
 func RegCloseKey(hKey HKEY) int32 {
@@ -726,4 +797,48 @@ func BuildExplicitAccessWithName(pExplicitAccess *EXPLICIT_ACCESS, pTrusteeName 
 		uintptr(AccessMode),
 		uintptr(Inheritance),
 		0)
+}
+
+func GetTokenInformation(TokenHandle HANDLE, TokenInformationClass uint32, TokenInformation uintptr, TokenInformationLength uint32, ReturnLength *uint32) BOOL {
+	ret, _, _ := syscall.Syscall6(getTokenInformation.Addr(), 5,
+		uintptr(TokenHandle),
+		uintptr(TokenInformationClass),
+		uintptr(TokenInformation),
+		uintptr(TokenInformationLength),
+		uintptr(unsafe.Pointer(ReturnLength)),
+		0)
+	return BOOL(ret)
+}
+
+func DuplicateTokenEx(hExistingToken HANDLE, dwDesiredAccess uint32, lpTokenAttributes *SECURITY_ATTRIBUTES, ImpersonationLevel uint32, TokenType uint32, phNewToken *HANDLE) BOOL {
+	ret, _, _ := syscall.Syscall6(duplicateTokenEx.Addr(), 6,
+		uintptr(hExistingToken),
+		uintptr(dwDesiredAccess),
+		uintptr(unsafe.Pointer(lpTokenAttributes)),
+		uintptr(ImpersonationLevel),
+		uintptr(TokenType),
+		uintptr(unsafe.Pointer(phNewToken)))
+	return BOOL(ret)
+}
+
+func CreateProcessAsUser(hToken HANDLE, lpApplicationName, lpCommandLine *string, lpProcessAttributes, lpThreadAttributes *SECURITY_ATTRIBUTES,
+	bInheritHandles BOOL, dwCreationFlags uint32, lpEnvironment uintptr, lpCurrentDirectory *string, lpStartupInfo *STARTUPINFO, lpProcessInformation *PROCESS_INFORMATION) BOOL {
+	applicationName := UTF16PtrFromString(lpApplicationName)
+	commandLine := UTF16PtrFromString(lpCommandLine)
+	currentDirectory := UTF16PtrFromString(lpCurrentDirectory)
+
+	ret, _, _ := syscall.Syscall12(createProcessAsUser.Addr(), 11,
+		uintptr(hToken),
+		uintptr(unsafe.Pointer(applicationName)),
+		uintptr(unsafe.Pointer(commandLine)),
+		uintptr(unsafe.Pointer(lpProcessAttributes)),
+		uintptr(unsafe.Pointer(lpThreadAttributes)),
+		uintptr(bInheritHandles),
+		uintptr(dwCreationFlags),
+		lpEnvironment,
+		uintptr(unsafe.Pointer(currentDirectory)),
+		uintptr(unsafe.Pointer(lpStartupInfo)),
+		uintptr(unsafe.Pointer(lpProcessInformation)),
+		0)
+	return BOOL(ret)
 }
