@@ -257,6 +257,7 @@ var (
 	createEvent                        *windows.LazyProc
 	setEvent                           *windows.LazyProc
 	resetEvent                         *windows.LazyProc
+	createProcess                      *windows.LazyProc
 )
 
 type (
@@ -398,6 +399,7 @@ func init() {
 	createEvent = libkernel32.NewProc("CreateEventW")
 	setEvent = libkernel32.NewProc("SetEvent")
 	resetEvent = libkernel32.NewProc("ResetEvent")
+	createProcess = libkernel32.NewProc("CreateProcessW")
 }
 
 func ActivateActCtx(ctx HANDLE) (uintptr, bool) {
@@ -845,5 +847,27 @@ func ResetEvent(hEvent HANDLE) BOOL {
 		0,
 		0)
 
+	return BOOL(ret)
+}
+
+func CreateProcess(lpApplicationName, lpCommandLine *string, lpProcessAttributes, lpThreadAttributes *SECURITY_ATTRIBUTES,
+	bInheritHandles BOOL, dwCreationFlags uint32, lpEnvironment uintptr, lpCurrentDirectory *string, lpStartupInfo *STARTUPINFO, lpProcessInformation *PROCESS_INFORMATION) BOOL {
+	applicationName := UTF16PtrFromString(lpApplicationName)
+	commandLine := UTF16PtrFromString(lpCommandLine)
+	currentDirectory := UTF16PtrFromString(lpCurrentDirectory)
+
+	ret, _, _ := syscall.Syscall12(createProcess.Addr(), 10,
+		uintptr(unsafe.Pointer(applicationName)),
+		uintptr(unsafe.Pointer(commandLine)),
+		uintptr(unsafe.Pointer(lpProcessAttributes)),
+		uintptr(unsafe.Pointer(lpThreadAttributes)),
+		uintptr(bInheritHandles),
+		uintptr(dwCreationFlags),
+		lpEnvironment,
+		uintptr(unsafe.Pointer(currentDirectory)),
+		uintptr(unsafe.Pointer(lpStartupInfo)),
+		uintptr(unsafe.Pointer(lpProcessInformation)),
+		0,
+		0)
 	return BOOL(ret)
 }
