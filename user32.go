@@ -1902,6 +1902,7 @@ var (
 	windowFromDC                *windows.LazyProc
 	windowFromPoint             *windows.LazyProc
 	setLayeredWindowAttributes  *windows.LazyProc
+	mapVirtualKey               *windows.LazyProc
 )
 
 func init() {
@@ -2059,6 +2060,7 @@ func init() {
 	windowFromDC = libuser32.NewProc("WindowFromDC")
 	windowFromPoint = libuser32.NewProc("WindowFromPoint")
 	setLayeredWindowAttributes = libuser32.NewProc("SetLayeredWindowAttributes")
+	mapVirtualKey = libuser32.NewProc("MapVirtualKeyW")
 }
 
 func AddClipboardFormatListener(hwnd HWND) bool {
@@ -3449,4 +3451,13 @@ func SetLayeredWindowAttributes(hwnd HWND, crKey COLORREF, bAlpha byte, dwFlags 
 		0)
 
 	return ret != 0
+}
+
+func MapVirtualKey(uCode, uMapType uint32) uint32 {
+	ret, _, _ := syscall.Syscall(mapVirtualKey.Addr(), 2,
+		uintptr(uCode),
+		uintptr(uMapType),
+		0)
+
+	return uint32(ret)
 }
